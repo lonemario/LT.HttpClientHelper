@@ -2,6 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Mario Righi</Authors>
+    <Company>LoneTech - www.mariorighi.com</Company>
+    <PackageLicenseUrl>https://choosealicense.com/licenses/mit/</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/lonemario/LT.HttpClientHelper</PackageProjectUrl>
+    <Description>Helper to manage the json serialization/deserialization entities over http in .NET Standard 2.0</Description>
   </PropertyGroup>
 
   <ItemGroup>
