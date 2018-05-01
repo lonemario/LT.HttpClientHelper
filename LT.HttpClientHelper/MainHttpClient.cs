@@ -33,10 +33,15 @@ namespace LT.HttpClientHelper
             //Validazione argomenti
             if (string.IsNullOrEmpty(baseUrl)) throw new ArgumentNullException(nameof(baseUrl));
 
+            var _baseUrl = baseUrl.Trim();
+            //Aggiungi / infondo se non presente
+            if (_baseUrl.Substring(_baseUrl.Length - 1) != "/")
+                _baseUrl = _baseUrl + "/";
+
             //Inizializzo il client
             _Client = new HttpClient
             {
-                BaseAddress = new Uri(baseUrl)
+                BaseAddress = new Uri(_baseUrl)
             };
 
             //Imposto i default
@@ -65,6 +70,11 @@ namespace LT.HttpClientHelper
         {
             //Validazione argomenti
             if (string.IsNullOrEmpty(partialUrl)) throw new ArgumentNullException(nameof(partialUrl));
+
+            var _partialUrl = partialUrl.Trim();
+            //Se presente elimina lo / all'inizio
+            if (_partialUrl.Substring(0,1) == "/")
+                partialUrl = _partialUrl.Substring(1);
 
             //Creo il messaggio di request con l'url e il verb
             HttpRequestMessage message = new HttpRequestMessage(method, partialUrl);
