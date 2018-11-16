@@ -49,4 +49,5 @@ namespace LT.HttpClientHelper.Models
             Data = data;
         }
     }
+
 }

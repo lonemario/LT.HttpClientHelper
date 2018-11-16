@@ -134,6 +134,74 @@ namespace LT.HttpClientHelper
             return contractResponse;
         }
 
+
+        /// <summary>
+        /// Execute a post on remove server
+        /// </summary>
+        /// <typeparam name="TRequest">Type of request</typeparam>
+        /// <param name="partialUrl">Partial URL</param>
+        /// <param name="method">HTTP method</param>
+        /// <param name="request">Request</param>
+        /// <param name="authentication">Authentication header</param>
+        /// <param name="acceptedResponseType">default is "application/json"</param>
+        /// <param name="encodingType">default is UTF8 </param>
+        /// <param name="contentMediaType">default is "application/json"</param>
+        /// <returns></returns>
+        public async Task<HttpResponseMessage> Invoke<TRequest>(string partialUrl,
+            HttpMethod method, TRequest request = null, AuthenticationHeaderValue authentication = null,
+            string acceptedResponseType = null, Encoding encodingType = null, string contentMediaType = null)
+            where TRequest : class, new()
+        {
+            //Validazione argomenti
+            if (string.IsNullOrEmpty(partialUrl)) throw new ArgumentNullException(nameof(partialUrl));
+
+            var _partialUrl = partialUrl.Trim();
+            //Se presente elimina lo / all'inizio
+            if (_partialUrl.Substring(0, 1) == "/")
+                partialUrl = _partialUrl.Substring(1);
+
+            //Creo il messaggio di request con l'url e il verb
+            HttpRequestMessage message = new HttpRequestMessage(method, partialUrl);
+
+            //Aggiungo l'header "Accept"
+            message.Headers.Accept.Clear();
+            if (String.IsNullOrWhiteSpace(acceptedResponseType))
+                acceptedResponseType = "application/json";
+            message.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(acceptedResponseType));
+
+            if (encodingType == null)
+                encodingType = Encoding.UTF8;
+
+            if (contentMediaType == null)
+                contentMediaType = "application/json";
+
+            if (request == null)
+            {
+                //se il content è 'application/json' aggiungo nel body un oggetto json vuoto
+                if (contentMediaType.Trim().ToLower() == "application/json")
+                    message.Content = new StringContent("{}",
+                        Encoding.UTF8, "application/json");
+            }
+            else
+            {
+                //Serializzo in formato JSON e imposto il contenuto (se diverso da null)
+                message.Content = new StringContent(
+                    JsonConvert.SerializeObject(request),
+                    encodingType, contentMediaType);
+            }
+
+            //Se ho un token autorizzativo
+            if (authentication != null)
+                message.Headers.Authorization = authentication;
+
+            //Eseguo la chiamata del client
+            return await _Client.SendAsync(message);
+
+        }
+
+
+
+
         /// <summary>
         /// Finalizer that ensures the object is correctly disposed of.
         /// </summary>
