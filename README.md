@@ -24,11 +24,17 @@ public static async void Authenticate()
     if (resultSignIn.Response.IsSuccessStatusCode)
     {
 
-        //AUTHENTICATED SEARCH
+        //RICERCO DA AUTENTICATO
         var auth = new AuthenticationHeaderValue(resultSignIn.Data.TokenType, resultSignIn.Data.AccessToken);
         var resultSearch = await httpClient.Invoke<SigIn, List<UserContract>>("user/search",
                                                             System.Net.Http.HttpMethod.Post,
-                                                            null,
+                                                            classToPost,
+                                                            auth);
+
+		//WITHOUT RETURN OBJECT
+        var deleteResoult = await httpClient.Invoke<SigIn>("user/delete",
+                                                            System.Net.Http.HttpMethod.Post,
+                                                            classToPost,
                                                             auth);
     }
 }

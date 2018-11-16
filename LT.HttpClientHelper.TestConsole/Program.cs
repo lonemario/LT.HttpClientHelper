@@ -33,7 +33,13 @@ namespace LT.HttpClientHelper.TestConsole
                 var auth = new AuthenticationHeaderValue(resultSignIn.Data.TokenType, resultSignIn.Data.AccessToken);
                 var resultSearch = await httpClient.Invoke<SigIn, List<UserContract>>("user/search",
                                                                     System.Net.Http.HttpMethod.Post,
-                                                                    null,
+                                                                    classToPost,
+                                                                    auth);
+
+
+                var deleteResoult = await httpClient.Invoke<SigIn>("user/delete",
+                                                                    System.Net.Http.HttpMethod.Post,
+                                                                    classToPost,
                                                                     auth);
             }
         }
