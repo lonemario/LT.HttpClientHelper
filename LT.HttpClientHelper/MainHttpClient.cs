@@ -200,6 +200,103 @@ namespace LT.HttpClientHelper
         }
 
 
+        /// <summary>
+        /// Execute a post on remove server
+        /// </summary>
+        /// <typeparam name="TResponse">Type of response</typeparam>
+        /// <param name="partialUrl">Partial URL</param>
+        /// <param name="method">HTTP method</param>
+        /// <param name="queryStringParameter">Query string parameters</param>
+        /// <param name="authentication">Authentication header</param>
+        /// <param name="acceptedResponseType">default is "application/json"</param>
+        /// <param name="encodingType">default is UTF8 </param>
+        /// <param name="contentMediaType">default is "application/json"</param>
+        /// <returns></returns>
+        public async Task<HttpResponseMessage<TResponse>> Invoke<TResponse>(string partialUrl,
+            HttpMethod method, string queryStringParameter = null, AuthenticationHeaderValue authentication = null,
+            string acceptedResponseType = null, Encoding encodingType = null, string contentMediaType = null)
+            where TResponse : class, new()
+        {
+            //Validazione argomenti
+            if (string.IsNullOrEmpty(partialUrl)) throw new ArgumentNullException(nameof(partialUrl));
+
+            var _partialUrl = partialUrl.Trim();
+            //Se presente elimina lo / all'inizio
+            if (_partialUrl.Substring(0, 1) == "/")
+                partialUrl = _partialUrl.Substring(1);
+
+            //Se presenti aggiungo i query string parameters
+            if (!string.IsNullOrWhiteSpace(queryStringParameter))
+            {
+                //se non presente il ? lo aggiungo
+                if (queryStringParameter.Substring(0, 1) != "?")
+                    partialUrl = partialUrl + "?" + queryStringParameter;
+                else
+                    partialUrl = partialUrl + queryStringParameter;
+            }
+
+            //Creo il messaggio di request con l'url e il verb
+            HttpRequestMessage message = new HttpRequestMessage(method, partialUrl);
+
+            //Aggiungo l'header "Accept"
+            message.Headers.Accept.Clear();
+            if (String.IsNullOrWhiteSpace(acceptedResponseType))
+                acceptedResponseType = "application/json";
+            message.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(acceptedResponseType));
+
+            if (encodingType == null)
+                encodingType = Encoding.UTF8;
+
+            //if (contentMediaType == null)
+            //    contentMediaType = "application/json";
+
+            //if (request == null)
+            //{
+
+            //se il content è 'application/json' aggiungo nel body un oggetto json vuoto
+            //if (contentMediaType.Trim().ToLower() == "application/json")
+            //    message.Content = new StringContent("{}",
+            //        Encoding.UTF8, "application/json");
+            //}
+            //else
+            //{
+            //    //Serializzo in formato JSON e imposto il contenuto (se diverso da null)
+            //    message.Content = new StringContent(
+            //        JsonConvert.SerializeObject(request),
+            //        encodingType, contentMediaType);
+            //}
+
+            //Se ho un token autorizzativo
+            if (authentication != null)
+            {
+                message.Headers.Authorization = authentication;
+                message.Headers.Add(authentication.Scheme, authentication.Parameter);
+            }
+                
+
+            //Eseguo la chiamata del client
+            var response = await _Client.SendAsync(message);
+
+            //Eseguo la creazione della response
+            HttpResponseMessage<TResponse> contractResponse = new HttpResponseMessage<TResponse>(response);
+
+            //Se la chiamata ha avuto successo (200 - Ok)
+            if (response.IsSuccessStatusCode)
+            {
+                //Recupero il contento presente nella response
+                string jsonContent = await response.Content.ReadAsStringAsync();
+
+                //Deserializzo la response (se valida)
+                if (!string.IsNullOrEmpty(jsonContent))
+                    contractResponse.Data = JsonConvert.DeserializeObject<TResponse>(jsonContent);
+
+                //Ritorno la response
+                return contractResponse;
+            }
+
+            //Ritorno semplicemente la response
+            return contractResponse;
+        }
 
 
         /// <summary>
