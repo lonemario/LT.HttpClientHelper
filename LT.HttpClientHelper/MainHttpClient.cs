@@ -334,7 +334,8 @@ namespace LT.HttpClientHelper
             if (!isDisposing)
             {
                 //RIlascio della logica non finalizzabile
-                _Client.Dispose();
+                if (_Client != null)
+                    _Client.Dispose();
             }
 
             //Marco il dispose e invoco il GC
