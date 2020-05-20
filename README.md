@@ -12,30 +12,38 @@ Newtonsoft.Json (>= 11.0.1)
 
 ### Example 
 ```c#
-public static async void Authenticate()
+public static async void TestCall()
 {
-    var httpClient = new MainHttpClient("http://myOaut.com/OAuth/api/");
+    var httpClient = new MainHttpClient("https://xx.xxxxx.xxx/OAuth/api/");
     var classToPost = new SigIn { UserName = "MRighi", Password = "password1" };
 
 
     var resultSignIn = await httpClient.Invoke<SigIn, SignInResult>("authentication/sign-in",
-                                                        System.Net.Http.HttpMethod.Post,
-                                                        classToPost);
+							System.Net.Http.HttpMethod.Post,
+							classToPost);
     if (resultSignIn.Response.IsSuccessStatusCode)
     {
 
-        //RICERCO DA AUTENTICATO
-        var auth = new AuthenticationHeaderValue(resultSignIn.Data.TokenType, resultSignIn.Data.AccessToken);
-        var resultSearch = await httpClient.Invoke<SigIn, List<UserContract>>("user/search",
-                                                            System.Net.Http.HttpMethod.Post,
-                                                            classToPost,
-                                                            auth);
+	//RICERCO DA AUTENTICATO
+	var auth = new AuthenticationHeaderValue(resultSignIn.Data.TokenType, resultSignIn.Data.AccessToken);
+	var resultSearch = await httpClient.Invoke<SigIn, List<UserContract>>("user/search",
+							    System.Net.Http.HttpMethod.Post,
+							    classToPost,
+							    auth);
 
-		//WITHOUT RETURN OBJECT
-        var deleteResoult = await httpClient.Invoke<SigIn>("user/delete",
-                                                            System.Net.Http.HttpMethod.Post,
-                                                            classToPost,
-                                                            auth);
+	var classToPost2 = new UserContract();
+
+	var deleteResult = await httpClient.InvokeNoResponse<UserContract>("user/delete",
+							    System.Net.Http.HttpMethod.Post,
+							    classToPost2,
+							    auth);
+
+	var user = await httpClient.InvokeNoRequest<UserContract>("user/get",
+							    System.Net.Http.HttpMethod.Get,
+							    "?id=1",
+							    auth);
+
     }
 }
+
 ```
