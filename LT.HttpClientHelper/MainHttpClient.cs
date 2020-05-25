@@ -1,18 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using LT.HttpClientHelper.Models;
+using Newtonsoft.Json;
+using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
-using LT.HttpClientHelper.Models;
-using Newtonsoft.Json;
 
 namespace LT.HttpClientHelper
 {
     /// <summary>
     /// Main client for service requests
     /// </summary>
-    public class MainHttpClient : IDisposable
+    public class MainHttpClient : IDisposable, IMainHttpClient
     {
         #region Private fields
         private bool _IsDisposed;
@@ -25,7 +24,25 @@ namespace LT.HttpClientHelper
         public Uri BaseAddress => _Client?.BaseAddress;
 
         /// <summary>
-        /// Constructor
+        /// Client base address in string format
+        /// </summary>
+        public string BaseAddressString
+        {
+            get {
+                return _Client?.BaseAddress.OriginalString;
+            }
+            set {
+                var _baseUrl = value.Trim();
+                //Aggiungi / infondo se non presente
+                if (_baseUrl.Substring(_baseUrl.Length - 1) != "/")
+                    _baseUrl = _baseUrl + "/";
+                if (_Client != null)
+                    _Client.BaseAddress = new Uri(_baseUrl);
+            }
+        }
+
+        /// <summary>
+        /// Constructor whit base url
         /// </summary>
         /// <param name="baseUrl">Base URL for API service</param>
         public MainHttpClient(string baseUrl)
@@ -43,6 +60,19 @@ namespace LT.HttpClientHelper
             {
                 BaseAddress = new Uri(_baseUrl)
             };
+
+            //Imposto i default
+            _Client.DefaultRequestHeaders.Accept.Clear();
+            _Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        }
+
+        /// <summary>
+        /// Costructor with no parameters, remember to set BaseAddress
+        /// </summary>
+        public MainHttpClient()
+        {
+            //Inizializzo il client
+            _Client = new HttpClient();
 
             //Imposto i default
             _Client.DefaultRequestHeaders.Accept.Clear();
@@ -70,6 +100,7 @@ namespace LT.HttpClientHelper
         {
             //Validazione argomenti
             if (string.IsNullOrEmpty(partialUrl)) throw new ArgumentNullException(nameof(partialUrl));
+            if (_Client.BaseAddress == null) throw new Exception("Remember to set BaseAddress!");
 
             var _partialUrl = partialUrl.Trim();
             //Se presente elimina lo / all'inizio
@@ -147,7 +178,7 @@ namespace LT.HttpClientHelper
         /// <param name="acceptedResponseType">default is "application/json"</param>
         /// <param name="encodingType">default is UTF8 </param>
         /// <param name="contentMediaType">default is "application/json"</param>
-        /// <returns></returns>
+        /// <returns>Returns task with response</returns>
         [Obsolete("Invoke<TRequest> is deprecated, please use InvokeNoResponse<TRequest> instead.")]
         public async Task<HttpResponseMessage> Invoke<TRequest>(string partialUrl,
             HttpMethod method, TRequest request, AuthenticationHeaderValue authentication = null,
@@ -156,6 +187,7 @@ namespace LT.HttpClientHelper
         {
             //Validazione argomenti
             if (string.IsNullOrEmpty(partialUrl)) throw new ArgumentNullException(nameof(partialUrl));
+            if (_Client.BaseAddress == null) throw new Exception("Remember to set BaseAddress!");
 
             var _partialUrl = partialUrl.Trim();
             //Se presente elimina lo / all'inizio
@@ -203,7 +235,7 @@ namespace LT.HttpClientHelper
 
 
         /// <summary>
-        /// Execute a post on remote server
+        /// Execute a post on remote server without return a class
         /// </summary>
         /// <typeparam name="TRequest">Type of request</typeparam>
         /// <param name="partialUrl">Partial URL</param>
@@ -213,7 +245,7 @@ namespace LT.HttpClientHelper
         /// <param name="acceptedResponseType">default is "application/json"</param>
         /// <param name="encodingType">default is UTF8 </param>
         /// <param name="contentMediaType">default is "application/json"</param>
-        /// <returns></returns>
+        /// <returns>Returns task with response</returns>
         public async Task<HttpResponseMessage> InvokeNoResponse<TRequest>(string partialUrl,
             HttpMethod method, TRequest request = null, AuthenticationHeaderValue authentication = null,
             string acceptedResponseType = null, Encoding encodingType = null, string contentMediaType = null)
@@ -221,6 +253,7 @@ namespace LT.HttpClientHelper
         {
             //Validazione argomenti
             if (string.IsNullOrEmpty(partialUrl)) throw new ArgumentNullException(nameof(partialUrl));
+            if (_Client.BaseAddress == null) throw new Exception("Remember to set BaseAddress!");
 
             var _partialUrl = partialUrl.Trim();
             //Se presente elimina lo / all'inizio
@@ -278,7 +311,7 @@ namespace LT.HttpClientHelper
         /// <param name="acceptedResponseType">default is "application/json"</param>
         /// <param name="encodingType">default is UTF8 </param>
         /// <param name="contentMediaType">default is "application/json"</param>
-        /// <returns></returns>
+        /// <returns>Returns task with response</returns>
         [Obsolete("Invoke<TResponse> is deprecated, please use InvokeNoRequest<TResponse> instead.")]
         public async Task<HttpResponseMessage<TResponse>> Invoke<TResponse>(string partialUrl,
             HttpMethod method, string queryStringParameter = null, AuthenticationHeaderValue authentication = null,
@@ -287,6 +320,7 @@ namespace LT.HttpClientHelper
         {
             //Validazione argomenti
             if (string.IsNullOrEmpty(partialUrl)) throw new ArgumentNullException(nameof(partialUrl));
+            if (_Client.BaseAddress == null) throw new Exception("Remember to set BaseAddress!");
 
             var _partialUrl = partialUrl.Trim();
             //Se presente elimina lo / all'inizio
@@ -367,7 +401,7 @@ namespace LT.HttpClientHelper
         }
 
         /// <summary>
-        /// Execute a post on remote server
+        /// Execute a post on remote server without send a class
         /// </summary>
         /// <typeparam name="TResponse">Type of response</typeparam>
         /// <param name="partialUrl">Partial URL</param>
@@ -377,7 +411,7 @@ namespace LT.HttpClientHelper
         /// <param name="acceptedResponseType">default is "application/json"</param>
         /// <param name="encodingType">default is UTF8 </param>
         /// <param name="contentMediaType">default is "application/json"</param>
-        /// <returns></returns>
+        /// <returns>Returns task with response</returns>
         public async Task<HttpResponseMessage<TResponse>> InvokeNoRequest<TResponse>(string partialUrl,
             HttpMethod method, string queryStringParameter = null, AuthenticationHeaderValue authentication = null,
             string acceptedResponseType = null, Encoding encodingType = null, string contentMediaType = null)
@@ -385,6 +419,7 @@ namespace LT.HttpClientHelper
         {
             //Validazione argomenti
             if (string.IsNullOrEmpty(partialUrl)) throw new ArgumentNullException(nameof(partialUrl));
+            if (_Client.BaseAddress == null) throw new Exception("Remember to set BaseAddress!");
 
             var _partialUrl = partialUrl.Trim();
             //Se presente elimina lo / all'inizio
@@ -462,6 +497,101 @@ namespace LT.HttpClientHelper
 
             //Ritorno semplicemente la response
             return contractResponse;
+        }
+
+
+        /// <summary>
+        /// Execute a post on remove server Synchronously
+        /// If you can use async method for best performance
+        /// </summary>
+        /// <typeparam name="TRequest">Type of request</typeparam>
+        /// <typeparam name="TResponse">Type or response</typeparam>
+        /// <param name="partialUrl">Partial URL</param>
+        /// <param name="method">HTTP method</param>
+        /// <param name="request">Request</param>
+        /// <param name="authentication">Authentication header</param>
+        /// <param name="acceptedResponseType">default is "application/json"</param>
+        /// <param name="encodingType">default is UTF8 </param>
+        /// <param name="contentMediaType">default is "application/json"</param>
+        /// <returns>Returns response</returns>
+        public HttpResponseMessage<TResponse> InvokeSync<TRequest, TResponse>(string partialUrl,
+            HttpMethod method, TRequest request = null, AuthenticationHeaderValue authentication = null,
+            string acceptedResponseType = null, Encoding encodingType = null, string contentMediaType = null)
+            where TRequest : class, new()
+            where TResponse : class, new()
+        {
+            var task = Task.Run(() => Invoke<TRequest, TResponse>(partialUrl,
+                                                                  method,
+                                                                  request,
+                                                                  authentication,
+                                                                  acceptedResponseType,
+                                                                  encodingType,
+                                                                  contentMediaType));
+            task.Wait();
+            return task.Result;
+        }
+
+
+
+        /// <summary>
+        /// Execute a post on remote server Synchronously without return a class
+        /// If you can use async method for best performance
+        /// </summary>
+        /// <typeparam name="TRequest">Type of request</typeparam>
+        /// <param name="partialUrl">Partial URL</param>
+        /// <param name="method">HTTP method</param>
+        /// <param name="request">Request</param>
+        /// <param name="authentication">Authentication header</param>
+        /// <param name="acceptedResponseType">default is "application/json"</param>
+        /// <param name="encodingType">default is UTF8 </param>
+        /// <param name="contentMediaType">default is "application/json"</param>
+        /// <returns>Returns response</returns>
+        public HttpResponseMessage InvokeNoResponseSync<TRequest>(string partialUrl,
+            HttpMethod method, TRequest request = null, AuthenticationHeaderValue authentication = null,
+            string acceptedResponseType = null, Encoding encodingType = null, string contentMediaType = null)
+            where TRequest : class, new()
+        {
+            var task = Task.Run(() => InvokeNoResponse<TRequest>(partialUrl,
+                                                                 method,
+                                                                 request, 
+                                                                 authentication,
+                                                                 acceptedResponseType,
+                                                                 encodingType,
+                                                                 contentMediaType));
+            task.Wait();
+            return task.Result;
+
+        }
+
+
+        /// <summary>
+        /// Execute a post on remote server Synchronously without send a class
+        /// If you can use async method for best performance
+        /// </summary>
+        /// <typeparam name="TResponse">Type of response</typeparam>
+        /// <param name="partialUrl">Partial URL</param>
+        /// <param name="method">HTTP method</param>
+        /// <param name="queryStringParameter">Query string parameters</param>
+        /// <param name="authentication">Authentication header</param>
+        /// <param name="acceptedResponseType">default is "application/json"</param>
+        /// <param name="encodingType">default is UTF8 </param>
+        /// <param name="contentMediaType">default is "application/json"</param>
+        /// <returns>Returns response</returns>
+        public HttpResponseMessage<TResponse> InvokeNoRequestSync<TResponse>(string partialUrl,
+            HttpMethod method, string queryStringParameter = null, AuthenticationHeaderValue authentication = null,
+            string acceptedResponseType = null, Encoding encodingType = null, string contentMediaType = null)
+            where TResponse : class, new()
+        {
+            var task = Task.Run(() => InvokeNoRequest<TResponse>(partialUrl,
+                                                                 method,
+                                                                 queryStringParameter,
+                                                                 authentication,
+                                                                 acceptedResponseType,
+                                                                 encodingType,
+                                                                 contentMediaType));
+            task.Wait();
+            return task.Result;
+
         }
 
         /// <summary>
