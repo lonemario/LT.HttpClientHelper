@@ -1,7 +1,7 @@
 # LT.HttpClientHelper
 [![NuGet](https://img.shields.io/nuget/v/Nuget.Core.svg)](https://www.nuget.org/packages/LT.HttpClientHelper)
 
-Helper to manage the json serialization/deserialization entities over http in .NET Standard 2.0
+Helper to manage the json serialization/deserialization entities over http in .NET Standard 2.0 asynchronously and synchronously
 
 ## Prerequisites
 
