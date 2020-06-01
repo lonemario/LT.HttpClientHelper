@@ -80,7 +80,60 @@ namespace LT.HttpClientHelper
         }
 
         /// <summary>
-        /// Execute a post on remove server
+        /// Send a request on remote server without send and return classes
+        /// </summary>
+        /// <param name="partialUrl"></param>
+        /// <param name="method"></param>
+        /// <param name="authentication"></param>
+        /// <param name="acceptedResponseType"></param>
+        /// <param name="encodingType"></param>
+        /// <param name="contentMediaType"></param>
+        /// <returns>Returns task with response</returns>
+        public async Task<HttpResponseMessage> InvokeBase(string partialUrl,
+            HttpMethod method, AuthenticationHeaderValue authentication = null,
+            string acceptedResponseType = null, Encoding encodingType = null, string contentMediaType = null)            
+        {
+            //Validazione argomenti
+            if (string.IsNullOrEmpty(partialUrl)) throw new ArgumentNullException(nameof(partialUrl));
+            if (_Client.BaseAddress == null) throw new Exception("Remember to set BaseAddress!");
+
+            var _partialUrl = partialUrl.Trim();
+            //Se presente elimina lo / all'inizio
+            if (_partialUrl.Substring(0, 1) == "/")
+                partialUrl = _partialUrl.Substring(1);
+
+            //Creo il messaggio di request con l'url e il verb
+            HttpRequestMessage message = new HttpRequestMessage(method, partialUrl);
+
+            //Aggiungo l'header "Accept"
+            message.Headers.Accept.Clear();
+            if (String.IsNullOrWhiteSpace(acceptedResponseType))
+                acceptedResponseType = "application/json";
+            message.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(acceptedResponseType));
+
+            if (encodingType == null)
+                encodingType = Encoding.UTF8;
+
+            if (contentMediaType == null)
+                contentMediaType = "application/json";
+
+            //se il content è 'application/json' aggiungo nel body un oggetto json vuoto
+            if (contentMediaType.Trim().ToLower() == "application/json")
+                message.Content = new StringContent("{}",
+                    Encoding.UTF8, "application/json");
+
+            //Se ho un token autorizzativo
+            if (authentication != null)
+                message.Headers.Authorization = authentication;
+
+            //Eseguo la chiamata del client
+            return await _Client.SendAsync(message);
+
+        }
+
+
+        /// <summary>
+        /// Send a request on remote server
         /// </summary>
         /// <typeparam name="TRequest">Type of request</typeparam>
         /// <typeparam name="TResponse">Type or response</typeparam>
@@ -168,7 +221,7 @@ namespace LT.HttpClientHelper
 
         /// <summary>
         /// DEPRECATED - use InvokeNoResponse<TRequest> instead.
-        /// Execute a post on remote server
+        /// Send a request on remote server
         /// </summary>
         /// <typeparam name="TRequest">Type of request</typeparam>
         /// <param name="partialUrl">Partial URL</param>
@@ -235,7 +288,7 @@ namespace LT.HttpClientHelper
 
 
         /// <summary>
-        /// Execute a post on remote server without return a class
+        /// Send a request on remote server without return a class
         /// </summary>
         /// <typeparam name="TRequest">Type of request</typeparam>
         /// <param name="partialUrl">Partial URL</param>
@@ -301,7 +354,7 @@ namespace LT.HttpClientHelper
 
         /// <summary>
         /// DEPRECATED - use InvokeNoRequest<TResponse> instead.
-        /// Execute a post on remote server
+        /// Send a request on remote server
         /// </summary>
         /// <typeparam name="TResponse">Type of response</typeparam>
         /// <param name="partialUrl">Partial URL</param>
@@ -401,7 +454,7 @@ namespace LT.HttpClientHelper
         }
 
         /// <summary>
-        /// Execute a post on remote server without send a class
+        /// Send a request on remote server without send a class
         /// </summary>
         /// <typeparam name="TResponse">Type of response</typeparam>
         /// <param name="partialUrl">Partial URL</param>
@@ -501,7 +554,34 @@ namespace LT.HttpClientHelper
 
 
         /// <summary>
-        /// Execute a post on remove server Synchronously
+        /// Send a request on remote server without send and return classes Synchronously
+        /// </summary>
+        /// <param name="partialUrl"></param>
+        /// <param name="method"></param>
+        /// <param name="authentication"></param>
+        /// <param name="acceptedResponseType"></param>
+        /// <param name="encodingType"></param>
+        /// <param name="contentMediaType"></param>
+        /// <returns>Returns response</returns>
+        public HttpResponseMessage InvokeBaseSync(string partialUrl,
+            HttpMethod method, AuthenticationHeaderValue authentication = null,
+            string acceptedResponseType = null, Encoding encodingType = null, string contentMediaType = null)
+        {
+            var task = Task.Run(() => InvokeBase(partialUrl,
+                                                 method,
+                                                 authentication,
+                                                 acceptedResponseType,
+                                                 encodingType,
+                                                 contentMediaType));
+            task.Wait();
+            return task.Result;
+
+        }
+
+
+
+        /// <summary>
+        /// Send a request on remove server Synchronously
         /// If you can use async method for best performance
         /// </summary>
         /// <typeparam name="TRequest">Type of request</typeparam>
@@ -534,7 +614,7 @@ namespace LT.HttpClientHelper
 
 
         /// <summary>
-        /// Execute a post on remote server Synchronously without return a class
+        /// Send a request on remote server Synchronously without return a class
         /// If you can use async method for best performance
         /// </summary>
         /// <typeparam name="TRequest">Type of request</typeparam>
@@ -565,7 +645,7 @@ namespace LT.HttpClientHelper
 
 
         /// <summary>
-        /// Execute a post on remote server Synchronously without send a class
+        /// Send a request on remote server Synchronously without send a class
         /// If you can use async method for best performance
         /// </summary>
         /// <typeparam name="TResponse">Type of response</typeparam>
