@@ -7,7 +7,7 @@ Helper to manage the json serialization/deserialization entities over http in .N
 
 ### .NETStandard 1.1
 ```
-Newtonsoft.Json (>= 12.0.3)
+Newtonsoft.Json (>= 13.0.2)
 ```
 
 ### Example 
