@@ -12,7 +12,7 @@ namespace LT.HttpClientHelper.TestConsole
             //Test async method
             TestCall();
 
-            Console.ReadKey();
+            //Console.ReadKey();
         }
 
         public static async void TestCall()
